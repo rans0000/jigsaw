@@ -3,6 +3,6 @@
 body{vertical-align: baseline;background: #fff;}
 
 /* +++++++++++++++++++++++++++ */
-body{margin-top: 50px;}
-.jigsaw_container{width: 300px;height: 300px;margin: auto;position: relative;}
-.puzzle_box{background: red;/*position: absolute;*/}
+body{margin-top: 20px;}
+.jigsaw_container{margin: auto;position: relative;/*width: 300px;height: 300px;*/width: calc(100vmin - 40px);height: calc(100vmin - 40px);}
+.puzzle_box{background: #ccc;position: absolute;border: 1px solid  #c3c3c3;cursor: move;line-height: 100%;text-align: center; -moz-user-select: -moz-none;-khtml-user-select: none;-webkit-user-select: none;-ms-user-select: none;user-select: none;}
