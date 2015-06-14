@@ -1,4 +1,4 @@
-//Jigsaw Puzzle 0.1.0
+//Jigsaw Puzzle 0.1.1
 var Jigsaw;
 (function ($, window, document, undefined) {
 	'use strict';
@@ -12,15 +12,22 @@ var Jigsaw;
 		init: function (option) {
 			this.config = $.extend({}, this.options, option);
 			this.config.container = $(this.config.container).addClass('jigsaw_container');
-			this.puzzleBox = [];
-			this.currentBox = null;
-
+			
 			this.hammer = new Hammer(this.config.container[0]);
 
+			this.bindCommonEvents();
+			this.startGame();
+		},
+		
+		startGame: function () {
+			$('.tools_bar').hide();
+			this.puzzleBox = [];
+			this.currentBox = null;
+			this.config.container.empty().attr('data-puzzle-status', 'unsolved');
+			
 			this.createPuzzleGrid(this.config.divisions);
 			this.shuffleBoxes(this.config.shuffleDepth, this.config.divisions);
-			this.bindEvents();
-			//console.log(this.puzzleBox);
+			this.bindPuzzleEvents();
 		},
 
 		createPuzzleGrid: function (numGrid) {
@@ -92,9 +99,7 @@ var Jigsaw;
 				},
 				this.config.animDuration * animateFlag,
 				function () {
-					puzzleBox.element
-					.removeClass('selected swapped swap_candidate')
-					.css({'z-index': 1});
+					puzzleBox.element.removeClass('selected swapped swap_candidate').css({'z-index': 1});
 				}
 			);
 		},
@@ -107,7 +112,7 @@ var Jigsaw;
 			});
 		},
 
-		bindEvents: function () {
+		bindPuzzleEvents: function () {
 			var selfed = this;
 
 			this.hammer.on('panstart', function (e) {
@@ -116,6 +121,14 @@ var Jigsaw;
 
 			this.hammer.on('panend', function (e) {
 				selfed.onBoxPanEnd(e);
+			});
+		},
+		
+		bindCommonEvents: function () {
+			var selfed = this;
+			$('#btn_restart').on('click', function (e) {
+				e.preventDefault();
+				selfed.startGame();
 			});
 		},
 
@@ -156,7 +169,7 @@ var Jigsaw;
 		},
 
 		onBoxPanEnd: function (e) {
-			var nearestPuzzleBox;
+			var nearestPuzzleBox, isPuzzleSolved;
 			this.hammer.off('pan');
 			nearestPuzzleBox = this.getNearestPuzzleBox(this.currentBox);
 			if (nearestPuzzleBox) {
@@ -165,6 +178,10 @@ var Jigsaw;
 			} else {
 				//go back to initial position
 				this.moveBox(this.currentBox, true);
+			}
+			
+			if (this.isPuzzleSolved()) {
+				this.declareVictory();
 			}
 		},
 
@@ -197,6 +214,28 @@ var Jigsaw;
 
 			}
 			return tempBox;
+		},
+		
+		isPuzzleSolved: function () {
+			var i = 0,
+				len = this.puzzleBox.length;
+			
+			for (i = 0; i < len; ++i) {
+				if (this.puzzleBox[i].id !== this.puzzleBox[i].position) {
+					break;
+				}
+			}
+			return (i === len);
+		},
+		
+		declareVictory: function () {
+			//console.log('victory');
+			
+			this.config.container.attr('data-puzzle-status', 'solved');
+			$('.tools_bar').show();
+			//unbind events
+			this.hammer.off('panstart');
+			this.hammer.off('panend');
 		}
 	};
 })(jQuery, window, document);
