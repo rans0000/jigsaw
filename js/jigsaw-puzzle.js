@@ -1,48 +1,51 @@
-//Jigsaw Puzzle 0.0.1
+//Jigsaw Puzzle 0.1.0
 var Jigsaw;
 (function ($, window, document, undefined) {
 	'use strict';
 	Jigsaw = {
 		options: {
 			container: '#jigsaw_container',
-			divisions: 3,
-			shuffleDepth: 1
+			divisions:		3,
+			shuffleDepth:	1,
+			animDuration:	100
 		},
 		init: function (option) {
 			this.config = $.extend({}, this.options, option);
-			this.config.container = $(this.config.container);
-			this.config.container.addClass('jigsaw_container');
-			this.puzzle_box = [];
+			this.config.container = $(this.config.container).addClass('jigsaw_container');
+			this.puzzleBox = [];
+			this.currentBox = null;
+
+			this.hammer = new Hammer(this.config.container[0]);
 
 			this.createPuzzleGrid(this.config.divisions);
 			this.shuffleBoxes(this.config.shuffleDepth, this.config.divisions);
 			this.bindEvents();
-			//console.log(this.puzzle_box);
+			//console.log(this.puzzleBox);
 		},
+
 		createPuzzleGrid: function (numGrid) {
-			var x, y, element, id,
+			var x, y, id, element,
 				selfed = this,
 				percent = (100 / selfed.config.divisions);
 			for (y = 0; y < numGrid; ++y) {
 				for (x = 0; x < numGrid; ++x) {
 					id = ((y * selfed.config.divisions) + x);
 					element = $('<div></div>', {
-						'class':	'puzzle_box',
-						'text':		id
+						'class':	'puzzle_box'
+						//'text':		id
 					}).css({
 						'width':	percent + '%',
 						'height':	percent + '%',
 						'left':		(x * percent) + '%',
 						'top':		(y * percent) + '%'
 					}).attr('data-puzzle-box', id).appendTo(this.config.container);
-					this.puzzle_box.push({
+					this.puzzleBox.push({
 						'id':			id,
 						'element':	element,
 						'position':	id,
 						'left':		(x * percent),
 						'top':		(y * percent)
 					});
-					//console.log(element);
 				}
 			}
 		},
@@ -55,47 +58,145 @@ var Jigsaw;
 			for (i = 0; i < shuffleDepth; ++i) {
 				for (j = 0; j < numGrid; ++j) {
 					randomNo = parseInt(Math.random() * numGrid);
-					this.swapBoxes(this.puzzle_box[j], this.puzzle_box[randomNo]);
+					this.swapBoxes(this.puzzleBox[j], this.puzzleBox[randomNo]);
 				}
 			}
 		},
 
-		swapBoxes: function (puzzle_box1, puzzle_box2) {
-			var tempBox1 = $.extend({}, puzzle_box1),
-				tempBox2 = $.extend({}, puzzle_box2);
-			puzzle_box1 = $.extend(puzzle_box1, puzzle_box2);
-			puzzle_box2 = $.extend(puzzle_box2, tempBox1);
+		swapBoxes: function (puzzleBox1, puzzleBox2, animateFlag) {
+			var tempBox1 = $.extend({}, puzzleBox1),
+				tempBox2 = $.extend({}, puzzleBox2);
+			puzzleBox1 = $.extend(puzzleBox1, puzzleBox2);
+			puzzleBox2 = $.extend(puzzleBox2, tempBox1);
 
-			puzzle_box1.position = tempBox1.position;
-			puzzle_box1.left = tempBox1.left;
-			puzzle_box1.top = tempBox1.top;
-			puzzle_box2.position = tempBox2.position;
-			puzzle_box2.left = tempBox2.left;
-			puzzle_box2.top = tempBox2.top;
+			puzzleBox1.position = tempBox1.position;
+			puzzleBox1.left = tempBox1.left;
+			puzzleBox1.top = tempBox1.top;
+			puzzleBox2.position = tempBox2.position;
+			puzzleBox2.left = tempBox2.left;
+			puzzleBox2.top = tempBox2.top;
 
-			this.moveBox(puzzle_box1);
-			this.moveBox(puzzle_box2);
+			this.moveBox(puzzleBox1, animateFlag);
+			this.moveBox(puzzleBox2, animateFlag);
 			//console.log(tempBox1);
 		},
 
-		moveBox: function (puzzle_box) {
-			puzzle_box.element.css({
-				left:	puzzle_box.left + '%',
-				top:	puzzle_box.top + '%'
+		moveBox: function (puzzleBox, animateFlag) {
+			//moves the box into the position saved in its object (initial position)
+			animateFlag = ~~animateFlag;
+
+			puzzleBox.element.animate(
+				{
+					left:	puzzleBox.left + '%',
+					top:	puzzleBox.top + '%'
+				},
+				this.config.animDuration * animateFlag,
+				function () {
+					puzzleBox.element
+					.removeClass('selected swapped swap_candidate')
+					.css({'z-index': 1});
+				}
+			);
+		},
+
+		moveBoxToXY: function (puzzleBox, x, y) {
+			//moves the box into an (x,y) cordinate
+			puzzleBox.element.css({
+				left:	x,
+				top:	y
 			});
 		},
 
 		bindEvents: function () {
 			var selfed = this;
-			this.config.container.on('click', '.puzzle_box', function (e) {
-				e.preventDefault();
-				selfed.onBoxClick($(this));
+
+			this.hammer.on('panstart', function (e) {
+				selfed.onBoxPanStart(e);
+			});
+
+			this.hammer.on('panend', function (e) {
+				selfed.onBoxPanEnd(e);
 			});
 		},
 
-		onBoxClick: function (puzzle_box) {
-			var id = puzzle_box.data('puzzle-box');
-			//console.log(id);
+		onBoxPanStart: function (e) {
+			var id, puzzleBox, i, len,
+				puzzleBoxElement = $(e.target),
+				selfed = this;
+
+			if (puzzleBoxElement.hasClass('puzzle_box')) {
+				id = puzzleBoxElement.data('puzzle-box');
+
+				//get the object for clicked puzzlebox
+				for (i = 0, len = this.puzzleBox.length; i < len; ++i) {
+					if (this.puzzleBox[i].id === id) {
+						puzzleBox = this.puzzleBox[i];
+						break;
+					}
+				}
+
+				//save the values for later use
+				this.currentBox = puzzleBox;
+				selfed.BoxStartX = puzzleBoxElement.position().left;
+				selfed.BoxStartY = puzzleBoxElement.position().top;
+				puzzleBox.element.css({'z-index': 2});
+				puzzleBox.element.addClass('selected');
+
+				//start moving the grid
+				selfed.hammer.on('pan', function (e) {
+					selfed.onBoxPan(e, puzzleBox);
+				});
+			}
+		},
+
+		onBoxPan: function (e, puzzleBox) {
+			//update the position of selected box with the drag
+			this.moveBoxToXY(puzzleBox, (this.BoxStartX + e.deltaX), (this.BoxStartY + e.deltaY));
+			this.getNearestPuzzleBox(puzzleBox);
+		},
+
+		onBoxPanEnd: function (e) {
+			var nearestPuzzleBox;
+			this.hammer.off('pan');
+			nearestPuzzleBox = this.getNearestPuzzleBox(this.currentBox);
+			if (nearestPuzzleBox) {
+				nearestPuzzleBox.element.addClass('swapped');
+				this.swapBoxes(nearestPuzzleBox, this.currentBox, true);
+			} else {
+				//go back to initial position
+				this.moveBox(this.currentBox, true);
+			}
+		},
+
+		getNearestPuzzleBox: function (puzzleBox) {
+			//finds the nearest puzzlebox from selected box. If nothing is found undefined is returned
+			//distance is half the diagonal length of the puzzlebox
+			var tempX, tempY, i, len, tempBox, tempDistance,
+				distance = (Math.SQRT2 * this.puzzleBox[0].element.width()) / 2, //root2a
+
+				dragX = puzzleBox.element.position().left,
+				dragY = puzzleBox.element.position().top;
+
+			for (i = 0, len = this.puzzleBox.length; i < len; ++i) {
+				if (puzzleBox.id !== this.puzzleBox[i].id) {
+					this.puzzleBox[i].element.removeClass('swap_candidate');
+					//console.log('removed :' + this.puzzleBox[i].id)
+					tempX = this.puzzleBox[i].element.position().left;
+					tempY = this.puzzleBox[i].element.position().top;
+					//calc the diagonal distance between both grids
+					tempDistance = Math.sqrt(((tempX - dragX) * (tempX - dragX)) + ((tempY - dragY) * (tempY - dragY)));
+
+					//selcet this puzzlebox if calculated distance is less than what is currently saved
+					if (tempDistance < distance) {
+						distance = tempDistance;
+						tempBox = this.puzzleBox[i];
+						this.puzzleBox[i].element.addClass('swap_candidate');
+						//console.log(this.puzzleBox[i].id + ' ' + distance);
+					}
+				}
+
+			}
+			return tempBox;
 		}
 	};
 })(jQuery, window, document);

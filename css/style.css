@@ -3,6 +3,9 @@
 body{vertical-align: baseline;background: #fff;}
 
 /* +++++++++++++++++++++++++++ */
-body{margin-top: 20px;}
+body{margin-top: 20px;font: normal normal 14px/18px Arial, "Helvetica Neue", Helvetica, sans-serif;}
 .jigsaw_container{margin: auto;position: relative;/*width: 300px;height: 300px;*/width: calc(100vmin - 40px);height: calc(100vmin - 40px);}
-.puzzle_box{background: #ccc;position: absolute;border: 1px solid  #c3c3c3;cursor: move;line-height: 100%;text-align: center; -moz-user-select: -moz-none;-khtml-user-select: none;-webkit-user-select: none;-ms-user-select: none;user-select: none;}
+.puzzle_box{background: #ccc;position: absolute;border: 1px solid  #c3c3c3;cursor: move;line-height: 100%;text-align: center; -moz-user-select: -moz-none;-khtml-user-select: none;-webkit-user-select: none;-ms-user-select: none;user-select: none; transition: .3s background;}
+.puzzle_box.selected{background: #4a82b2;}
+/*.puzzle_box.swap_candidate,.puzzle_box.swapped{background: #4ab256;}*/
+.puzzle_box::before{content: attr(data-puzzle-box);position: absolute;width: 100%;top: 50%;left: 0;margin-top: -8px;}

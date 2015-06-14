@@ -2,11 +2,11 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
-		<title>Jigsaw (0.0.1)</title>
+		<title>Jigsaw (0.1.0)</title>
 		<link rel="stylesheet" href="css/style.css">
 	</head>
 	<body>
-		<div id="jigsaw_container"></div>
+		<div id="jigsaw_wrap"></div>
 		<script src="js/jquery-1.9.0.min.js"></script>
 		<script src="js/hammer.js"></script>
 		<script src="js/jigsaw-puzzle.js"></script>
@@ -14,7 +14,7 @@
 			(function(){
 				'use strict';
 				var puzzle = Jigsaw.init({
-					'container': '#jigsaw_container',
+					'container': '#jigsaw_wrap',
 					'divisions': 3
 				});
 			})();
