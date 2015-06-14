@@ -1,4 +1,4 @@
-//Jigsaw Puzzle 0.1.1
+//Jigsaw Puzzle 0.1.2
 var Jigsaw;
 (function ($, window, document, undefined) {
 	'use strict';
@@ -21,13 +21,15 @@ var Jigsaw;
 		
 		startGame: function () {
 			$('.tools_bar').hide();
+			this.config.container.empty().attr('data-puzzle-status', 'unsolved');
 			this.puzzleBox = [];
 			this.currentBox = null;
-			this.config.container.empty().attr('data-puzzle-status', 'unsolved');
+			this.movesCount = 0;
 			
 			this.createPuzzleGrid(this.config.divisions);
 			this.shuffleBoxes(this.config.shuffleDepth, this.config.divisions);
 			this.bindPuzzleEvents();
+			this.startTime = new Date();
 		},
 
 		createPuzzleGrid: function (numGrid) {
@@ -171,9 +173,11 @@ var Jigsaw;
 		onBoxPanEnd: function (e) {
 			var nearestPuzzleBox, isPuzzleSolved;
 			this.hammer.off('pan');
+			//get nearest puzzlebox found, then swap positions else go back to initial position
 			nearestPuzzleBox = this.getNearestPuzzleBox(this.currentBox);
 			if (nearestPuzzleBox) {
 				nearestPuzzleBox.element.addClass('swapped');
+				++this.movesCount;
 				this.swapBoxes(nearestPuzzleBox, this.currentBox, true);
 			} else {
 				//go back to initial position
@@ -181,6 +185,7 @@ var Jigsaw;
 			}
 			
 			if (this.isPuzzleSolved()) {
+				this.endTime = new Date();
 				this.declareVictory();
 			}
 		},
@@ -229,13 +234,30 @@ var Jigsaw;
 		},
 		
 		declareVictory: function () {
-			//console.log('victory');
+			var resultText = '',
+				puzzleTime = new Date(this.endTime - this.startTime);
 			
-			this.config.container.attr('data-puzzle-status', 'solved');
-			$('.tools_bar').show();
 			//unbind events
 			this.hammer.off('panstart');
 			this.hammer.off('panend');
+			this.config.container.attr('data-puzzle-status', 'solved');
+			
+			//display results
+			resultText = 'You took ' + this.movesCount + ' moves to comlete the puzzle in ';
+			if(puzzleTime.getUTCHours()){
+				resultText += (puzzleTime.getUTCHours() + ' Hours ');
+			}
+			if(puzzleTime.getUTCMinutes()){
+				resultText += (puzzleTime.getUTCMinutes() + ' Minutes ');
+			}
+			if(puzzleTime.getUTCSeconds()){
+				resultText += (puzzleTime.getUTCSeconds() + ' Seconds.');
+			}
+			$('.result_box').empty().append($('<p></p>', {
+				'text' : resultText
+			}));
+			
+			$('.tools_bar').show();
 		}
 	};
 })(jQuery, window, document);
