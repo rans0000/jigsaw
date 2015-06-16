@@ -57,6 +57,17 @@ var Jigsaw;
 					});
 				}
 			}
+			SplitImage(document.getElementById('puzzle_map').src, this.config.divisions, this.imageToGrid.bind(this));
+		},
+		
+		imageToGrid: function (fragment) {
+			fragment = $(fragment);
+			var i, len,
+				imageBlocks = fragment.children('img'),
+				gridBlocks = this.config.container.children('.puzzle_box');
+			for (i = 0, len = imageBlocks.length; i < len; ++i) {
+				gridBlocks.eq(i).append(imageBlocks.eq(i));
+			}
 		},
 
 		shuffleBoxes: function (shuffleDepth, numGrid) {
@@ -67,7 +78,7 @@ var Jigsaw;
 			for (i = 0; i < shuffleDepth; ++i) {
 				for (j = 0; j < numGrid; ++j) {
 					randomNo = parseInt(Math.random() * numGrid);
-					this.swapBoxes(this.puzzleBox[j], this.puzzleBox[randomNo]);
+					this.swapBoxes(this.puzzleBox[j], this.puzzleBox[randomNo], true);
 				}
 			}
 		},
@@ -167,7 +178,7 @@ var Jigsaw;
 		onBoxPan: function (e, puzzleBox) {
 			//update the position of selected box with the drag
 			this.moveBoxToXY(puzzleBox, (this.BoxStartX + e.deltaX), (this.BoxStartY + e.deltaY));
-			this.getNearestPuzzleBox(puzzleBox);
+			//this.getNearestPuzzleBox(puzzleBox);
 		},
 
 		onBoxPanEnd: function (e) {
@@ -244,13 +255,13 @@ var Jigsaw;
 			
 			//display results
 			resultText = 'You took ' + this.movesCount + ' moves to comlete the puzzle in ';
-			if(puzzleTime.getUTCHours()){
+			if (puzzleTime.getUTCHours()) {
 				resultText += (puzzleTime.getUTCHours() + ' Hours ');
 			}
-			if(puzzleTime.getUTCMinutes()){
+			if (puzzleTime.getUTCMinutes()) {
 				resultText += (puzzleTime.getUTCMinutes() + ' Minutes ');
 			}
-			if(puzzleTime.getUTCSeconds()){
+			if (puzzleTime.getUTCSeconds()) {
 				resultText += (puzzleTime.getUTCSeconds() + ' Seconds.');
 			}
 			$('.result_box').empty().append($('<p></p>', {
