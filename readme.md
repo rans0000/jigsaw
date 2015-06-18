@@ -1,4 +1,4 @@
-Jigsaw-Puzzle Game (v0.1.2)
+Jigsaw-Puzzle Game (v0.2.0)
 # --------------------------- #
 
 Author:

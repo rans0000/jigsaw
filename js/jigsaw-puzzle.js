@@ -1,4 +1,4 @@
-//Jigsaw Puzzle 0.1.2
+//Jigsaw Puzzle (v0.2.0)
 var Jigsaw;
 (function ($, window, document, undefined) {
 	'use strict';
