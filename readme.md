@@ -12,3 +12,5 @@ A small puzzle game made with JavaScript.
 Features
 * Responsive & Mobile friendly
 * Touch enabled
+
+Demo: http://iamrans.com/experiments/jigsaw/
